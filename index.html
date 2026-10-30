@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keynote Web Studio - Project Manager</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --sidebar-bg: #262626;
+            --border-color: #38383a;
+            --accent-color: #007aff;
+            --text-main: #f5f5f7;
+            --text-muted: #86868b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        header {
+            height: 45px;
+            background-color: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            flex-shrink: 0;
+        }
+
+        .header-title-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-btn {
+            background: #3a3a3c;
+            border: none;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .logo-btn:hover { background: var(--accent-color); }
+
+        .header-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #d1d1d6;
+        }
+
+        button, select {
+            background-color: #3a3a3c;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover, select:hover {
+            background-color: #48484a;
+        }
+
+        button.primary {
+            background-color: var(--accent-color);
+        }
+        button.primary:hover {
+            background-color: #0062cc;
+        }
+
+        /* Project Manager / Title Screen */
+        #project-manager-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow-y: auto;
+            background-color: var(--bg-color);
+        }
+
+        .pm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .pm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .pm-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .pm-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .pm-card-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #fff;
+            word-break: break-all;
+        }
+
+        .pm-card-date {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .pm-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: auto;
+        }
+        .pm-card-actions button {
+            font-size: 10px;
+            padding: 3px 6px;
+        }
+
+        /* Studio Screen */
+        #studio-screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .master-grid {
+            flex: 1;
+            display: grid;
+            gap: 8px;
+            padding: 8px;
+            overflow: hidden;
+            background-color: #0a0a0a;
+        }
+
+        .isolated-pane {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .pane-top-bar {
+            height: 36px;
+            background-color: #222224;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            background: #2c2c2e;
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .toggle-btn:hover {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+
+        .pane-body-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 1. Sidebar */
+        .pane-sidebar {
+            width: 140px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 6px;
+            overflow-y: auto;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .pane-sidebar.hidden { display: none; }
+
+        .sidebar-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .pane-slide-thumb-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pane-slide-thumb {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #fff;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+        .pane-slide-thumb.active {
+            border-color: var(--accent-color);
+        }
+
+        .thumb-element-mini {
+            position: absolute;
+            box-sizing: border-box;
+        }
+
+        .thumb-menu-btn {
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 4px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .thumb-menu-btn:hover { background: rgba(0,0,0,0.8); }
+
+        .slide-menu-popup {
+            position: absolute;
+            right: 0;
+            top: 30px;
+            background: #2c2c2e;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .slide-menu-popup button {
+            background: none;
+            border: none;
+            color: #fff;
+            padding: 5px 10px;
+            text-align: left;
+            font-size: 11px;
+            width: 80px;
+            border-radius: 0;
+        }
+        .slide-menu-popup button:hover { background: var(--accent-color); }
+
+        /* 2. Canvas Area */
+        .pane-canvas-container {
+            flex: 1;
+            background-color: #141414;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+            position: relative;
+        }
+
+        .pane-canvas-toolbar {
+            height: 32px;
+            background-color: #1a1a1c;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 6px;
+            flex-shrink: 0;
+            font-size: 11px;
+        }
+
+        .pane-canvas-scroll {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            position: relative;
+            overflow: auto;
+        }
+
+        .slide-canvas {
+            width: 800px;
+            height: 450px;
+            background-color: #ffffff;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            overflow: hidden;
+            transform-origin: center;
+            flex-shrink: 0;
+        }
+
+        .canvas-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            box-sizing: border-box;
+            border: 1px dashed transparent;
+        }
+        .canvas-element.selected {
+            border: 1px solid var(--accent-color);
+            z-index: 100;
+        }
+        .canvas-element .inner-content {
+            width: 100%;
+            height: 100%;
+            outline: none;
+            word-break: break-word;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 3. Inspector Panel */
+        .pane-inspector {
+            width: 170px;
+            background-color: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 8px;
+            overflow-y: auto;
+            flex-shrink: 0;
+            font-size: 11px;
+            position: relative;
+        }
+        .pane-inspector.hidden { display: none; }
+
+        .inspector-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+        }
+
+        .ins-section {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+        .ins-section h4 {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .ins-control {
+            margin-bottom: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .ins-control label {
+            font-size: 10px;
+            color: #ccc;
+        }
+        .ins-control input, .ins-control select, .ins-control textarea {
+            background: #2a2a2c;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 3px;
+            border-radius: 4px;
+            font-size: 11px;
+            width: 100%;
+        }
+        .ins-control input[type="color"] {
+            -webkit-appearance: none;
+            height: 22px;
+            padding: 0;
+            cursor: pointer;
+            background: none;
+        }
+
+        /* Presentation Mode Modal */
+        #presenter-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .presenter-header-trigger {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            z-index: 10001;
+        }
+
+        .presenter-header {
+            position: absolute;
+            top: -50px;
+            left: 0;
+            width: 100%;
+            height: 45px;
+            background: rgba(20, 20, 20, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            color: #fff;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10002;
+            transition: top 0.3s ease-in-out;
+        }
+
+        .presenter-header-trigger:hover + .presenter-header,
+        .presenter-header:hover {
+            top: 0;
+        }
+
+        .presenter-body {
+            flex: 1;
+            display: grid;
+            gap: 8px;
+            padding: 10px;
+            overflow: auto;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .pres-pane-box {
+            position: relative;
+            background: #fff;
+            overflow: hidden;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pres-pane-canvas {
+            width: 800px;
+            height: 450px;
+            position: relative;
+            transform-origin: center;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .anim-fade { animation: fadeIn ease forwards; }
+        .anim-slide { animation: slideInLeft ease forwards; }
+        .anim-zoom { animation: zoomIn ease forwards; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="header-title-area">
+            <button class="logo-btn" id="homeBtn" onclick="goToProjectManager()">Home</button>
+            <div class="header-title" id="headerProjectName">Keynote Web Studio</div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <!-- Studio specific buttons -->
+            <span id="studio-controls" style="display:none; gap:8px; align-items:center;">
+                <label style="color:#aaa; font-size:12px;">分割数:</label>
+                <select id="splitCountSelect" onchange="changeSplitCount(Number(this.value))">
+                    <option value="1">1分割</option>
+                    <option value="2">2分割</option>
+                    <option value="3">3分割</option>
+                    <option value="4">4分割</option>
+                    <option value="6">6分割 (完全分離)</option>
+                </select>
+                <button class="primary" onclick="startPresentation()">スライドショー再生</button>
+            </span>
+            <!-- Home specific buttons -->
+            <span id="home-controls" style="display:flex; gap:8px; align-items:center;"></span>
+        </div>
+    </header>
+
+    <!-- Project Manager (Title Screen) -->
+    <div id="project-manager-screen">
+        <div class="pm-header">
+            <div>
+                <h2>プロジェクト一覧</h2>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">作成したプロジェクトは自動でこの端末に保存されます。</p>
+            </div>
+            <button class="primary" onclick="createNewProject()">新規プロジェクト作成</button>
+        </div>
+        <div class="pm-grid" id="pmGrid"></div>
+    </div>
+
+    <!-- Studio Screen -->
+    <div id="studio-screen">
+        <div class="master-grid" id="masterGrid"></div>
+    </div>
+
+    <!-- Presentation Fullscreen Mode -->
+    <div id="presenter-mode">
+        <div class="presenter-header-trigger"></div>
+        <div class="presenter-header">
+            <span>[Space/Enter/→]: 次へ / [←/Backspace]: 戻る / [数字 + キー]: 個別操作 / 上端にマウスで終了ボタン表示</span>
+            <button onclick="stopPresentation()">終了</button>
+        </div>
+        <div id="presenterGrid" class="presenter-body"></div>
+    </div>
+
+    <script>
+        let projects = JSON.parse(localStorage.getItem('keynote_projects') || '[]');
+        let currentProjectId = null;
+        let currentProjectData = null;
+
+        let splitCount = 1;
+        let panesData = [];
+        let draggingElInfo = null;
+        let presenterState = [];
+        let paneUIStates = [];
+
+        // 無制限のUndo / Redo 履歴管理用オブジェクト
+        let historyStack = [];
+        let historyPointer = -1;
+
+        function pushHistory() {
+            if (!currentProjectData) return;
+            historyStack = historyStack.slice(0, historyPointer + 1);
+            
+            const snapshot = JSON.stringify({
+                splitCount: splitCount,
+                panesData: panesData
+            });
+            historyStack.push(snapshot);
+            historyPointer = historyStack.length - 1;
+        }
+
+        function undoAction() {
+            if (historyPointer > 0) {
+                historyPointer--;
+                restoreHistoryState();
+            }
+        }
+
+        function redoAction() {
+            if (historyPointer < historyStack.length - 1) {
+                historyPointer++;
+                restoreHistoryState();
+            }
+        }
+
+        function restoreHistoryState() {
+            const state = JSON.parse(historyStack[historyPointer]);
+            splitCount = state.splitCount;
+            panesData = state.panesData;
+            currentProjectData.splitCount = splitCount;
+            currentProjectData.panesData = panesData;
+            document.getElementById('splitCountSelect').value = splitCount;
+            renderMasterGrid(false);
+            saveToLocalStorage();
+        }
+
+        function saveToLocalStorage() {
+            if (!currentProjectId) return;
+            currentProjectData.splitCount = splitCount;
+            currentProjectData.panesData = panesData;
+            currentProjectData.updatedAt = new Date().toLocaleString();
+
+            const idx = projects.findIndex(p => p.id === currentProjectId);
+            if (idx >= 0) {
+                projects[idx] = currentProjectData;
+            } else {
+                projects.push(currentProjectData);
+            }
+            localStorage.setItem('keynote_projects', JSON.stringify(projects));
+        }
+
+        function goToProjectManager() {
+            saveToLocalStorage();
+            currentProjectId = null;
+            currentProjectData = null;
+            document.getElementById('studio-screen').style.display = 'none';
+            document.getElementById('project-manager-screen').style.display = 'flex';
+            
+            document.getElementById('studio-controls').style.display = 'none';
+            document.getElementById('home-controls').style.display = 'flex';
+            document.getElementById('homeBtn').style.display = 'none';
+
+            document.getElementById('headerProjectName').innerText = 'Keynote Web Studio';
+            renderProjectManager();
+        }
+
+        function renderProjectManager() {
+            const grid = document.getElementById('pmGrid');
+            grid.innerHTML = '';
+
+            if (projects.length === 0) {
+                grid.innerHTML = `<div style="color: var(--text-muted); font-size:13px;">プロジェクトがありません。「新規プロジェクト作成」から始めてください。</div>`;
+                return;
+            }
+
+            projects.forEach(proj => {
+                const card = document.createElement('div');
+                card.className = 'pm-card';
+                card.onclick = () => openProject(proj.id);
+                card.innerHTML = `
+                    <div class="pm-card-title">${escapeHtml(proj.name)}</div>
+                    <div class="pm-card-date">更新: ${proj.updatedAt || '不明'}</div>
+                    <div class="pm-card-actions">
+                        <button onclick="event.stopPropagation(); renameProject('${proj.id}')">名前変更</button>
+                        <button style="background:#ff3b30;" onclick="event.stopPropagation(); deleteProject('${proj.id}')">削除</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function createNewProject() {
+            const name = prompt("プロジェクト名を入力してください:", "新規プレゼンテーション");
+            if (!name) return;
+
+            const newId = 'proj-' + Date.now();
+            const defaultSlides = [{
+                id: 1,
+                background: '#ffffff',
+                elements: [{
+                    id: 'el-1',
+                    type: 'text',
+                    content: 'タイトルスライド',
+                    x: 100, y: 150, width: 600, height: 80,
+                    fontSize: 40, fontFamily: 'Noto Sans JP',
+                    isBold: true, isUnderline: false, color: '#111111',
+                    padding: 10, animation: 'none', animTrigger: 'auto', delay: 0
+                }]
+            }];
+
+            let initialPanes = [];
+            for (let i = 0; i < 6; i++) {
+                initialPanes.push({
+                    slides: JSON.parse(JSON.stringify(defaultSlides)),
+                    currentSlideIndex: 0,
+                    selectedElementId: null,
+                    activeEditingId: null
+                });
+            }
+
+            const newProj = {
+                id: newId,
+                name: name,
+                splitCount: 1,
+                panesData: initialPanes,
+                updatedAt: new Date().toLocaleString()
+            };
+
+            projects.push(newProj);
+            localStorage.setItem('keynote_projects', JSON.stringify(projects));
+            openProject(newId);
+        }
+
+        function openProject(id) {
+            const proj = projects.find(p => p.id === id);
+            if (!proj) return;
+
+            currentProjectId = proj.id;
+            currentProjectData = proj;
+            splitCount = proj.splitCount || 1;
+            panesData = proj.panesData;
+
+            historyStack = [];
+            historyPointer = -1;
+            pushHistory();
+
+            paneUIStates = [];
+            for(let i=0; i<6; i++) {
+                paneUIStates.push({ sidebar: true, inspector: true });
+            }
+
+            document.getElementById('splitCountSelect').value = splitCount;
+            document.getElementById('headerProjectName').innerText = proj.name;
+            document.getElementById('project-manager-screen').style.display = 'none';
+            document.getElementById('studio-screen').style.display = 'flex';
+            
+            document.getElementById('studio-controls').style.display = 'flex';
+            document.getElementById('home-controls').style.display = 'none';
+            document.getElementById('homeBtn').style.display = 'inline-block';
+
+            renderMasterGrid(false);
+        }
+
+        function renameProject(id) {
+            const proj = projects.find(p => p.id === id);
+            if (!proj) return;
+            const newName = prompt("新しいプロジェクト名:", proj.name);
+            if (!newName) return;
+            proj.name = newName;
+            proj.updatedAt = new Date().toLocaleString();
+            localStorage.setItem('keynote_projects', JSON.stringify(projects));
+            renderProjectManager();
+        }
+
+        function deleteProject(id) {
+            if (!confirm("本当にこのプロジェクトを削除しますか？")) return;
+            projects = projects.filter(p => p.id !== id);
+            localStorage.setItem('keynote_projects', JSON.stringify(projects));
+            renderProjectManager();
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function changeSplitCount(count) {
+            splitCount = count;
+            renderMasterGrid();
+        }
+
+        function renderMasterGrid(recordHistory = true) {
+            if (recordHistory) {
+                pushHistory();
+            }
+            const grid = document.getElementById('masterGrid');
+            grid.innerHTML = '';
+
+            let cols = '1fr';
+            let rows = '1fr';
+            if (splitCount === 2) cols = '1fr 1fr';
+            else if (splitCount === 3) cols = '1fr 1fr 1fr';
+            else if (splitCount === 4) { cols = '1fr 1fr'; rows = '1fr 1fr'; }
+            else if (splitCount === 6) { cols = '1fr 1fr 1fr'; rows = '1fr 1fr'; }
+
+            grid.style.gridTemplateColumns = cols;
+            grid.style.gridTemplateRows = rows;
+
+            for (let i = 0; i < splitCount; i++) {
+                grid.appendChild(createPaneElement(i));
+            }
+            saveToLocalStorage();
+        }
+
+        function createPaneElement(paneIndex) {
+            const pane = panesData[paneIndex];
+            if (!paneUIStates[paneIndex]) {
+                paneUIStates[paneIndex] = { sidebar: true, inspector: true };
+            }
+            const uiState = paneUIStates[paneIndex];
+
+            if (pane.currentSlideIndex >= pane.slides.length) {
+                pane.currentSlideIndex = pane.slides.length - 1;
+            }
+            const currentSlide = pane.slides[pane.currentSlideIndex];
+            const selectedEl = currentSlide.elements.find(el => el.id === pane.selectedElementId);
+
+            const paneBox = document.createElement('div');
+            paneBox.className = 'isolated-pane';
+
+            const topBar = document.createElement('div');
+            topBar.className = 'pane-top-bar';
+            topBar.innerHTML = `
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span>画面 #${paneIndex + 1} (${pane.currentSlideIndex + 1}/${pane.slides.length})</span>
+                    ${!uiState.sidebar ? `<button class="toggle-btn" onclick="togglePaneSidebar(${paneIndex})">+左バー</button>` : ''}
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    ${!uiState.inspector ? `<button class="toggle-btn" onclick="togglePaneInspector(${paneIndex})">+右バー</button>` : ''}
+                </div>
+            `;
+            paneBox.appendChild(topBar);
+
+            const bodyLayout = document.createElement('div');
+            bodyLayout.className = 'pane-body-layout';
+
+            // --- A. Sidebar ---
+            const sidebar = document.createElement('div');
+            sidebar.className = `pane-sidebar ${uiState.sidebar ? '' : 'hidden'}`;
+            
+            const sideHeaderRow = document.createElement('div');
+            sideHeaderRow.className = 'sidebar-header-row';
+            sideHeaderRow.innerHTML = `
+                <span>スライド</span>
+                <button class="toggle-btn" onclick="togglePaneSidebar(${paneIndex})" style="padding:1px 4px;">×</button>
+            `;
+            sidebar.appendChild(sideHeaderRow);
+
+            pane.slides.forEach((slide, sIdx) => {
+                const thumbWrapper = document.createElement('div');
+                thumbWrapper.className = 'pane-slide-thumb-wrapper';
+                thumbWrapper.draggable = true;
+
+                thumbWrapper.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({ paneIndex, sIdx }));
+                };
+                thumbWrapper.ondragover = (e) => e.preventDefault();
+                thumbWrapper.ondrop = (e) => {
+                    e.preventDefault();
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    if (data.paneIndex === paneIndex && data.sIdx !== sIdx) {
+                        const movedSlide = pane.slides.splice(data.sIdx, 1)[0];
+                        pane.slides.splice(sIdx, 0, movedSlide);
+                        if (pane.currentSlideIndex === data.sIdx) {
+                            pane.currentSlideIndex = sIdx;
+                        } else if (pane.currentSlideIndex > data.sIdx && pane.currentSlideIndex <= sIdx) {
+                            pane.currentSlideIndex--;
+                        } else if (pane.currentSlideIndex < data.sIdx && pane.currentSlideIndex >= sIdx) {
+                            pane.currentSlideIndex++;
+                        }
+                        renderMasterGrid();
+                    }
+                };
+
+                const thumb = document.createElement('div');
+                thumb.className = `pane-slide-thumb ${sIdx === pane.currentSlideIndex ? 'active' : ''}`;
+                thumb.style.backgroundColor = slide.background;
+                thumb.onclick = () => {
+                    pane.currentSlideIndex = sIdx;
+                    pane.selectedElementId = null;
+                    pane.activeEditingId = null;
+                    renderMasterGrid(false);
+                };
+
+                const scaleX = 120 / 800;
+                const scaleY = 67.5 / 450;
+                slide.elements.forEach(el => {
+                    const mini = document.createElement('div');
+                    mini.className = 'thumb-element-mini';
+                    mini.style.left = (el.x * scaleX) + 'px';
+                    mini.style.top = (el.y * scaleY) + 'px';
+                    mini.style.width = (el.width * scaleX) + 'px';
+                    mini.style.height = (el.height * scaleY) + 'px';
+                    if (el.type === 'text') {
+                        mini.style.fontSize = Math.max(3, el.fontSize * scaleY) + 'px';
+                        mini.style.color = el.color;
+                        mini.style.overflow = 'hidden';
+                        mini.innerText = el.content;
+                    } else if (el.type === 'shape') {
+                        mini.innerHTML = getShapeSvg(el.shapeType || 'rect', el.color);
+                    }
+                    thumb.appendChild(mini);
+                });
+
+                thumbWrapper.appendChild(thumb);
+
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'thumb-menu-btn';
+                menuBtn.innerHTML = '…';
+                menuBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const popup = thumbWrapper.querySelector('.slide-menu-popup');
+                    document.querySelectorAll('.slide-menu-popup').forEach(p => { if(p !== popup) p.style.display = 'none'; });
+                    popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+                };
+                thumbWrapper.appendChild(menuBtn);
+
+                const popup = document.createElement('div');
+                popup.className = 'slide-menu-popup';
+                popup.innerHTML = `
+                    <button onclick="duplicateSlide(${paneIndex}, ${sIdx})">複製</button>
+                    ${pane.slides.length > 1 ? `<button onclick="deleteSlide(${paneIndex},${sIdx})">削除</button>` : ''}
+                `;
+                thumbWrapper.appendChild(popup);
+
+                sidebar.appendChild(thumbWrapper);
+            });
+
+            document.onclick = (e) => {
+                document.querySelectorAll('.slide-menu-popup').forEach(p => p.style.display = 'none');
+            };
+
+            const addSlideBtn = document.createElement('button');
+            addSlideBtn.innerText = '+ 追加';
+            addSlideBtn.style.padding = '4px';
+            addSlideBtn.onclick = () => {
+                pane.slides.push({
+                    id: Date.now(),
+                    background: '#ffffff',
+                    elements: []
+                });
+                pane.currentSlideIndex = pane.slides.length - 1;
+                pane.selectedElementId = null;
+                renderMasterGrid();
+            };
+            sidebar.appendChild(addSlideBtn);
+            bodyLayout.appendChild(sidebar);
+
+            // --- B. Canvas Container ---
+            const canvasContainer = document.createElement('div');
+            canvasContainer.className = 'pane-canvas-container';
+
+            const canvasToolbar = document.createElement('div');
+            canvasToolbar.className = 'pane-canvas-toolbar';
+            canvasToolbar.innerHTML = `
+                <button onclick="undoAction()" title="取り消し (Undo)">←</button>
+                <button onclick="redoAction()" title="やり直し (Redo)">→</button>
+                <span style="border-left:1px solid var(--border-color); height:16px; margin:0 4px;"></span>
+                <button onclick="addText(${paneIndex})">+T</button>
+                <button onclick="addImage(${paneIndex})">+画像</button>
+                <select onchange="addShape(${paneIndex}, this)" style="width:70px;">
+                    <option value="" disabled selected>+図形</option>
+                    <option value="rect">四角</option>
+                    <option value="circle">丸</option>
+                    <option value="rounded">角丸</option>
+                    <option value="triangle">三角</option>
+                    <option value="arrow">矢印</option>
+                </select>
+            `;
+            canvasContainer.appendChild(canvasToolbar);
+
+            const scrollArea = document.createElement('div');
+            scrollArea.className = 'pane-canvas-scroll';
+
+            const canvas = document.createElement('div');
+            canvas.className = 'slide-canvas';
+            canvas.style.backgroundColor = currentSlide.background;
+
+            currentSlide.elements.forEach(el => {
+                const elDiv = document.createElement('div');
+                elDiv.className = `canvas-element ${el.id === pane.selectedElementId ? 'selected' : ''}`;
+                elDiv.style.left = el.x + 'px';
+                elDiv.style.top = el.y + 'px';
+                elDiv.style.width = el.width + 'px';
+                elDiv.style.height = el.height + 'px';
+
+                const inner = document.createElement('div');
+                inner.className = 'inner-content';
+
+                if (el.type === 'text') {
+                    inner.style.fontSize = el.fontSize + 'px';
+                    inner.style.fontFamily = el.fontFamily || 'Noto Sans JP';
+                    inner.style.fontWeight = el.isBold ? 'bold' : 'normal';
+                    inner.style.textDecoration = el.isUnderline ? 'underline' : 'none';
+                    inner.style.color = el.color;
+                    inner.style.padding = (el.padding || 5) + 'px';
+                    inner.innerText = el.content;
+
+                    if (pane.activeEditingId === el.id) {
+                        inner.contentEditable = 'true';
+                        setTimeout(() => inner.focus(), 50);
+                        inner.oninput = (e) => { el.content = e.target.innerText; saveToLocalStorage(); };
+                        inner.onblur = () => { pane.activeEditingId = null; renderMasterGrid(false); };
+                    } else {
+                        inner.contentEditable = 'false';
+                    }
+                } else if (el.type === 'image') {
+                    inner.style.backgroundImage = `url('${el.content}')`;
+                    inner.style.backgroundSize = 'cover';
+                    inner.style.backgroundPosition = 'center';
+                } else if (el.type === 'shape') {
+                    inner.innerHTML = getShapeSvg(el.shapeType || 'rect', el.color);
+                }
+
+                elDiv.onmousedown = (e) => {
+                    if (pane.activeEditingId === el.id) return;
+                    pane.selectedElementId = el.id;
+                    renderMasterGrid(false);
+
+                    draggingElInfo = {
+                        paneIndex,
+                        elId: el.id,
+                        offsetX: e.clientX - el.x,
+                        offsetY: e.clientY - el.y
+                    };
+                    e.stopPropagation();
+                };
+
+                elDiv.ondblclick = (e) => {
+                    if (el.type === 'text') {
+                        pane.activeEditingId = el.id;
+                        renderMasterGrid(false);
+                        e.stopPropagation();
+                    }
+                };
+
+                elDiv.appendChild(inner);
+                canvas.appendChild(elDiv);
+            });
+
+            canvas.onclick = (e) => {
+                if (e.target === canvas) {
+                    pane.selectedElementId = null;
+                    pane.activeEditingId = null;
+                    renderMasterGrid(false);
+                }
+            };
+
+            scrollArea.appendChild(canvas);
+            canvasContainer.appendChild(scrollArea);
+            bodyLayout.appendChild(canvasContainer);
+
+            // --- C. Inspector Panel ---
+            const inspector = document.createElement('div');
+            inspector.className = `pane-inspector ${uiState.inspector ? '' : 'hidden'}`;
+
+            const insHeaderRow = document.createElement('div');
+            insHeaderRow.className = 'inspector-header-row';
+            insHeaderRow.innerHTML = `
+                <span>インスペクター</span>
+                <button class="toggle-btn" onclick="togglePaneInspector(${paneIndex})" style="padding:1px 4px;">×</button>
+            `;
+            inspector.appendChild(insHeaderRow);
+
+            if (!selectedEl) {
+                const bgSec = document.createElement('div');
+                bgSec.className = 'ins-section';
+                bgSec.style.marginTop = '6px';
+                bgSec.innerHTML = `
+                    <h4>背景色</h4>
+                    <div class="ins-control">
+                        <input type="color" value="${currentSlide.background}" onchange="updateBg(${paneIndex}, this.value)">
+                    </div>
+                `;
+                inspector.appendChild(bgSec);
+            } else {
+                const detailsDiv = document.createElement('div');
+                detailsDiv.style.display = 'flex';
+                detailsDiv.style.flexDirection = 'column';
+                detailsDiv.style.gap = '8px';
+                detailsDiv.style.marginTop = '6px';
+                detailsDiv.innerHTML = `
+                    <div class="ins-section">
+                        <h4>位置・サイズ</h4>
+                        <div style="display:flex; gap:4px;">
+                            <div class="ins-control"><label>X</label><input type="number" value="${selectedEl.x}" onchange="updateEl(${paneIndex}, 'x', Number(this.value))"></div>
+                            <div class="ins-control"><label>Y</label><input type="number" value="${selectedEl.y}" onchange="updateEl(${paneIndex}, 'y', Number(this.value))"></div>
+                        </div>
+                        <div style="display:flex; gap:4px;">
+                            <div class="ins-control"><label>幅</label><input type="number" value="${selectedEl.width}" onchange="updateEl(${paneIndex}, 'width', Number(this.value))"></div>
+                            <div class="ins-control"><label>高</label><input type="number" value="${selectedEl.height}" onchange="updateEl(${paneIndex}, 'height', Number(this.value))"></div>
+                        </div>
+                    </div>
+                    <div class="ins-section">
+                        <h4>スタイル</h4>
+                        ${selectedEl.type === 'text' ? `
+                            <div class="ins-control"><label>文字</label><textarea rows="2" oninput="updateEl(${paneIndex}, 'content', this.value)">${selectedEl.content}</textarea></div>
+                            <div class="ins-control"><label>色</label><input type="color" value="${selectedEl.color}" onchange="updateEl(${paneIndex}, 'color', this.value)"></div>
+                            <div class="ins-control"><label>サイズ</label><input type="number" value="${selectedEl.fontSize}" onchange="updateEl(${paneIndex}, 'fontSize', Number(this.value))"></div>
+                            <div class="ins-control">
+                                <label>フォント</label>
+                                <select onchange="updateEl(${paneIndex}, 'fontFamily', this.value)">
+                                    <option value="Noto Sans JP" ${selectedEl.fontFamily === 'Noto Sans JP' ? 'selected' : ''}>Noto Sans JP</option>
+                                    <option value="Noto Serif JP" ${selectedEl.fontFamily === 'Noto Serif JP' ? 'selected' : ''}>Noto Serif JP</option>
+                                    <option value="M PLUS Rounded 1c" ${selectedEl.fontFamily === 'M PLUS Rounded 1c' ? 'selected' : ''}>Rounded</option>
+                                    <option value="Fira Code" ${selectedEl.fontFamily === 'Fira Code' ? 'selected' : ''}>Fira Code</option>
+                                    <option value="Inter" ${selectedEl.fontFamily === 'Inter' ? 'selected' : ''}>Inter</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; gap:4px; margin-top:4px;">
+                                <button style="flex:1; font-weight:${selectedEl.isBold?'bold':'normal'}; background:${selectedEl.isBold?'var(--accent-color)':'#3a3a3c'}" onclick="toggleStyle(${paneIndex}, 'isBold')">B</button>
+                                <button style="flex:1; text-decoration:underline; background:${selectedEl.isUnderline?'var(--accent-color)':'#3a3a3c'}" onclick="toggleStyle(${paneIndex}, 'isUnderline')">U</button>
+                            </div>
+                        ` : `
+                            <div class="ins-control"><label>カラー</label><input type="color" value="${selectedEl.color}" onchange="updateEl(${paneIndex}, 'color', this.value)"></div>
+                        `}
+                    </div>
+                    <div class="ins-section">
+                        <h4>アニメーション</h4>
+                        <div class="ins-control">
+                            <label>エフェクト</label>
+                            <select onchange="updateEl(${paneIndex}, 'animation', this.value)">
+                                <option value="none" ${(!selectedEl.animation || selectedEl.animation === 'none') ? 'selected' : ''}>デフォルト</option>
+                                <option value="fade" ${selectedEl.animation === 'fade' ? 'selected' : ''}>フェードイン</option>
+                                <option value="slide" ${selectedEl.animation === 'slide' ? 'selected' : ''}>スライドイン</option>
+                                <option value="zoom" ${selectedEl.animation === 'zoom' ? 'selected' : ''}>ズームイン</option>
+                            </select>
+                        </div>
+                        <div class="ins-control">
+                            <label>再生方式</label>
+                            <select onchange="updateEl(${paneIndex}, 'animTrigger', this.value)">
+                                <option value="auto" ${(!selectedEl.animTrigger || selectedEl.animTrigger === 'auto') ? 'selected' : ''}>自動</option>
+                                <option value="manual" ${selectedEl.animTrigger === 'manual' ? 'selected' : ''}>手動</option>
+                            </select>
+                        </div>
+                        <div class="ins-control">
+                            <label>遅延 (秒)</label>
+                            <input type="number" step="0.1" min="0" value="${selectedEl.delay || 0}" onchange="updateEl(${paneIndex}, 'delay', Number(this.value))">
+                        </div>
+                    </div>
+                    <div class="ins-section" style="border:none;">
+                        <button style="background:#ff3b30; width:100%; font-size:10px; padding:4px;" onclick="deleteEl(${paneIndex})">要素を削除</button>
+                    </div>
+                `;
+                inspector.appendChild(detailsDiv);
+            }
+
+            bodyLayout.appendChild(inspector);
+            paneBox.appendChild(bodyLayout);
+            return paneBox;
+        }
+
+        function togglePaneSidebar(paneIndex) {
+            paneUIStates[paneIndex].sidebar = !paneUIStates[paneIndex].sidebar;
+            renderMasterGrid(false);
+        }
+
+        function togglePaneInspector(paneIndex) {
+            paneUIStates[paneIndex].inspector = !paneUIStates[paneIndex].inspector;
+            renderMasterGrid(false);
+        }
+
+        function duplicateSlide(paneIndex, sIdx) {
+            const pane = panesData[paneIndex];
+            const target = pane.slides[sIdx];
+            const duplicated = JSON.parse(JSON.stringify(target));
+            duplicated.id = Date.now();
+            pane.slides.splice(sIdx + 1, 0, duplicated);
+            pane.currentSlideIndex = sIdx + 1;
+            renderMasterGrid();
+        }
+
+        function deleteSlide(paneIndex, sIdx) {
+            const pane = panesData[paneIndex];
+            if (pane.slides.length <= 1) return;
+            pane.slides.splice(sIdx, 1);
+            if (pane.currentSlideIndex >= pane.slides.length) {
+                pane.currentSlideIndex = pane.slides.length - 1;
+            }
+            renderMasterGrid();
+        }
+
+        function addText(paneIndex) {
+            const pane = panesData[paneIndex];
+            const slide = pane.slides[pane.currentSlideIndex];
+            const newEl = {
+                id: 'el-' + Math.random().toString(36).substr(2,9),
+                type: 'text',
+                content: 'テキスト',
+                x: 100, y: 100, width: 300, height: 60,
+                fontSize: 28, fontFamily: 'Noto Sans JP',
+                isBold: false, isUnderline: false, color: '#222222',
+                padding: 5, animation: 'none', animTrigger: 'auto', delay: 0
+            };
+            slide.elements.push(newEl);
+            pane.selectedElementId = newEl.id;
+            renderMasterGrid();
+        }
+
+        function addImage(paneIndex) {
+            const url = prompt("画像URL:", "https://picsum.photos/400/300");
+            if (!url) return;
+            const pane = panesData[paneIndex];
+            const slide = pane.slides[pane.currentSlideIndex];
+            const newEl = {
+                id: 'el-' + Math.random().toString(36).substr(2,9),
+                type: 'image',
+                content: url,
+                x: 150, y: 100, width: 300, height: 200,
+                color: '#000', animation: 'none', animTrigger: 'auto', delay: 0
+            };
+            slide.elements.push(newEl);
+            pane.selectedElementId = newEl.id;
+            renderMasterGrid();
+        }
+
+        function addShape(paneIndex, selectElem) {
+            const shapeType = selectElem.value;
+            if (!shapeType) return;
+            selectElem.selectedIndex = 0;
+            const pane = panesData[paneIndex];
+            const slide = pane.slides[pane.currentSlideIndex];
+            const newEl = {
+                id: 'el-' + Math.random().toString(36).substr(2,9),
+                type: 'shape',
+                shapeType: shapeType,
+                x: 200, y: 120, width: 180, height: 140,
+                color: '#007aff', animation: 'none', animTrigger: 'auto', delay: 0
+            };
+            slide.elements.push(newEl);
+            pane.selectedElementId = newEl.id;
+            renderMasterGrid();
+        }
+
+        function updateBg(paneIndex, color) {
+            const pane = panesData[paneIndex];
+            pane.slides[pane.currentSlideIndex].background = color;
+            renderMasterGrid();
+        }
+
+        function updateEl(paneIndex, key, val) {
+            const pane = panesData[paneIndex];
+            const slide = pane.slides[pane.currentSlideIndex];
+            const el = slide.elements.find(item => item.id === pane.selectedElementId);
+            if (el) {
+                el[key] = val;
+                renderMasterGrid();
+            }
+        }
+
+        function toggleStyle(paneIndex, key) {
+            const pane = panesData[paneIndex];
+            const slide = pane.slides[pane.currentSlideIndex];
+            const el = slide.elements.find(item => item.id === pane.selectedElementId);
+            if (el) {
+                el[key] = !el[key];
+                renderMasterGrid();
+            }
+        }
+
+        function deleteEl(paneIndex) {
+            const pane = panesData[paneIndex];
+            const slide = pane.slides[pane.currentSlideIndex];
+            slide.elements = slide.elements.filter(item => item.id !== pane.selectedElementId);
+            pane.selectedElementId = null;
+            renderMasterGrid();
+        }
+
+        function getShapeSvg(type, color) {
+            if (type === 'circle') return `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"><circle cx="50" cy="50" r="48" fill="${color}"/></svg>`;
+            if (type === 'rounded') return `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="2" y="2" width="96" height="96" rx="20" ry="20" fill="${color}"/></svg>`;
+            if (type === 'triangle') return `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="50,2 98,98 2,98" fill="${color}"/></svg>`;
+            if (type === 'arrow') return `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="10,35 60,35 60,15 95,50 60,85 60,65 10,65" fill="${color}"/></svg>`;
+            return `<div style="width:100%; height:100%; background:${color};"></div>`;
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            if (!draggingElInfo) return;
+            const pane = panesData[draggingElInfo.paneIndex];
+            const slide = pane.slides[pane.currentSlideIndex];
+            const el = slide.elements.find(item => item.id === draggingElInfo.elId);
+            if (el) {
+                el.x = e.clientX - draggingElInfo.offsetX;
+                el.y = e.clientY - draggingElInfo.offsetY;
+                renderMasterGrid(false);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (draggingElInfo) {
+                draggingElInfo = null;
+                pushHistory();
+                saveToLocalStorage();
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('presenter-mode');
+            if (modal.style.display === 'flex') {
+                if (e.key >= '1' && e.key <= '6') {
+                    window._targetPaneKey = Number(e.key) - 1;
+                    return;
+                }
+
+                // 進む操作 (Space, Enter, ArrowRight)
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') {
+                    const processPane = (i) => {
+                        const pane = panesData[i];
+                        const state = presenterState[i];
+                        const slide = pane.slides[state.slideIdx];
+
+                        const hasManual = slide.elements.some(el => (el.animTrigger || 'auto') === 'manual');
+                        if (hasManual && state.step === 0) {
+                            state.step = 1;
+                        } else {
+                            if (state.slideIdx < pane.slides.length - 1) {
+                                state.slideIdx++;
+                                state.step = 0;
+                            }
+                        }
+                    };
+
+                    if (window._targetPaneKey !== undefined && window._targetPaneKey >= 0 && window._targetPaneKey < splitCount) {
+                        processPane(window._targetPaneKey);
+                        window._targetPaneKey = undefined;
+                    } else {
+                        for (let i = 0; i < splitCount; i++) {
+                            processPane(i);
+                        }
+                    }
+                    renderPresentationGrid();
+                    e.preventDefault();
+                } 
+                // 戻る操作 (ArrowLeft, Backspace)
+                else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+                    const processPaneBack = (i) => {
+                        const pane = panesData[i];
+                        const state = presenterState[i];
+                        const slide = pane.slides[state.slideIdx];
+
+                        const hasManual = slide.elements.some(el => (el.animTrigger || 'auto') === 'manual');
+                        if (hasManual && state.step > 0) {
+                            state.step = 0;
+                        } else {
+                            if (state.slideIdx > 0) {
+                                state.slideIdx--;
+                                const prevSlide = pane.slides[state.slideIdx];
+                                const prevHasManual = prevSlide.elements.some(el => (el.animTrigger || 'auto') === 'manual');
+                                state.step = prevHasManual ? 1 : 0;
+                            }
+                        }
+                    };
+
+                    if (window._targetPaneKey !== undefined && window._targetPaneKey >= 0 && window._targetPaneKey < splitCount) {
+                        processPaneBack(window._targetPaneKey);
+                        window._targetPaneKey = undefined;
+                    } else {
+                        for (let i = 0; i < splitCount; i++) {
+                            processPaneBack(i);
+                        }
+                    }
+                    renderPresentationGrid();
+                    e.preventDefault();
+                } 
+                else if (e.key === 'Escape') {
+                    stopPresentation();
+                }
+            } else {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    undoAction();
+                    e.preventDefault();
+                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                    redoAction();
+                    e.preventDefault();
+                }
+            }
+        });
+
+        function startPresentation() {
+            const modal = document.getElementById('presenter-mode');
+            modal.style.display = 'flex';
+            presenterState = [];
+            for (let i = 0; i < 6; i++) {
+                presenterState.push({ slideIdx: 0, step: 0 });
+            }
+            renderPresentationGrid();
+        }
+
+        function stopPresentation() {
+            document.getElementById('presenter-mode').style.display = 'none';
+        }
+
+        function renderPresentationGrid() {
+            const grid = document.getElementById('presenterGrid');
+            grid.innerHTML = '';
+
+            let cols = '1fr';
+            let rows = '1fr';
+            if (splitCount === 2) cols = '1fr 1fr';
+            else if (splitCount === 3) cols = '1fr 1fr 1fr';
+            else if (splitCount === 4) { cols = '1fr 1fr'; rows = '1fr 1fr'; }
+            else if (splitCount === 6) { cols = '1fr 1fr 1fr'; rows = '1fr 1fr'; }
+
+            grid.style.gridTemplateColumns = cols;
+            grid.style.gridTemplateRows = rows;
+
+            for (let i = 0; i < splitCount; i++) {
+                const pane = panesData[i];
+                const state = presenterState[i];
+                
+                if (state.slideIdx >= pane.slides.length) {
+                    state.slideIdx = pane.slides.length - 1;
+                }
+                const slide = pane.slides[state.slideIdx];
+
+                const box = document.createElement('div');
+                box.className = 'pres-pane-box';
+
+                const canvas = document.createElement('div');
+                canvas.className = 'pres-pane-canvas';
+                canvas.style.backgroundColor = slide.background;
+
+                slide.elements.forEach((el) => {
+                    const div = document.createElement('div');
+                    div.style.position = 'absolute';
+                    div.style.left = el.x + 'px';
+                    div.style.top = el.y + 'px';
+                    div.style.width = el.width + 'px';
+                    div.style.height = el.height + 'px';
+                    div.style.boxSizing = 'border-box';
+
+                    const delay = el.delay || 0;
+                    const trigger = el.animTrigger || 'auto';
+
+                    if (trigger === 'manual' && state.step < 1) {
+                        div.style.display = 'none';
+                    } else {
+                        div.style.display = 'block';
+                        const animType = el.animation || 'none';
+                        if (animType !== 'none') {
+                            if (animType === 'fade') div.classList.add('anim-fade');
+                            else if (animType === 'slide') div.classList.add('anim-slide');
+                            else if (animType === 'zoom') div.classList.add('anim-zoom');
+
+                            div.style.animationDuration = '0.8s';
+                            div.style.animationDelay = delay + 's';
+                        } else {
+                            if (delay > 0) {
+                                div.style.opacity = '0';
+                                div.style.animation = `fadeIn 0.01s ease ${delay}s forwards`;
+                            }
+                        }
+                    }
+
+                    const inner = document.createElement('div');
+                    inner.style.width = '100%';
+                    inner.style.height = '100%';
+                    inner.style.display = 'flex';
+                    inner.style.alignItems = 'center';
+                    inner.style.justifyContent = 'center';
+                    inner.style.wordBreak = 'break-word';
+
+                    if (el.type === 'text') {
+                        inner.style.fontSize = el.fontSize + 'px';
+                        inner.style.fontFamily = el.fontFamily || 'Noto Sans JP';
+                        inner.style.fontWeight = el.isBold ? 'bold' : 'normal';
+                        inner.style.textDecoration = el.isUnderline ? 'underline' : 'none';
+                        inner.style.color = el.color;
+                        inner.style.padding = (el.padding || 5) + 'px';
+                        inner.innerText = el.content;
+                    } else if (el.type === 'image') {
+                        inner.style.backgroundImage = `url('${el.content}')`;
+                        inner.style.backgroundSize = 'cover';
+                        inner.style.backgroundPosition = 'center';
+                    } else if (el.type === 'shape') {
+                        inner.innerHTML = getShapeSvg(el.shapeType || 'rect', el.color);
+                    }
+
+                    div.appendChild(inner);
+                    canvas.appendChild(div);
+                });
+
+                box.appendChild(canvas);
+                grid.appendChild(box);
+            }
+        }
+
+        // 初期表示設定（ホーム画面）
+        document.getElementById('homeBtn').style.display = 'none';
+        document.getElementById('studio-controls').style.display = 'none';
+        document.getElementById('home-controls').style.display = 'flex';
+        renderProjectManager();
+    </script>
+</body>
+</html>
